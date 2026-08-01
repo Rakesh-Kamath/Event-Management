@@ -1,0 +1,14 @@
+// Base64 Data Strings for Indian Event Banners, Speaker Photos, and Category Icons
+// Stored directly in MongoDB Atlas as Base64 data strings (no external URLs)
+
+export const INDIA_EVENT_BANNERS = {
+  techBengaluru: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='500' viewBox='0 0 1000 500'><rect width='1000' height='500' fill='%23111115'/><circle cx='500' cy='250' r='180' fill='none' stroke='%23ffffff' stroke-width='2' stroke-dasharray='10 5'/><text x='500' y='230' fill='%23ffffff' font-family='sans-serif' font-size='32' font-weight='800' text-anchor='middle'>INDIA AI & CLOUD SUMMIT 2026</text><text x='500' y='270' fill='%23a1a1aa' font-family='sans-serif' font-size='18' text-anchor='middle'>KTPO Trade Centre • Bengaluru, India</text></svg>",
+  
+  musicMumbai: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='500' viewBox='0 0 1000 500'><rect width='1000' height='500' fill='%230a0a0d'/><polygon points='500,80 620,380 380,380' fill='none' stroke='%23ffffff' stroke-width='2'/><text x='500' y='230' fill='%23ffffff' font-family='sans-serif' font-size='32' font-weight='800' text-anchor='middle'>MUMBAI SYMPHONY & JAZZ NIGHT</text><text x='500' y='270' fill='%23a1a1aa' font-family='sans-serif' font-size='18' text-anchor='middle'>Jio World Convention Centre • BKC, Mumbai</text></svg>",
+
+  startupDelhi: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='500' viewBox='0 0 1000 500'><rect width='1000' height='500' fill='%2316161a'/><rect x='300' y='120' width='400' height='260' fill='none' stroke='%23ffffff' stroke-width='2'/><text x='500' y='230' fill='%23ffffff' font-family='sans-serif' font-size='32' font-weight='800' text-anchor='middle'>DELHI TECH & STARTUP EXPO</text><text x='500' y='270' fill='%23a1a1aa' font-family='sans-serif' font-size='18' text-anchor='middle'>Pragati Maidan • Delhi NCR, India</text></svg>",
+
+  sportsGoa: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='500' viewBox='0 0 1000 500'><rect width='1000' height='500' fill='%230e0e12'/><circle cx='500' cy='250' r='140' fill='none' stroke='%23ffffff' stroke-width='3'/><text x='500' y='230' fill='%23ffffff' font-family='sans-serif' font-size='32' font-weight='800' text-anchor='middle'>GOA BEACH MARATHON 2026</text><text x='500' y='270' fill='%23a1a1aa' font-family='sans-serif' font-size='18' text-anchor='middle'>Bambolim Beach • Panaji, Goa</text></svg>",
+
+  speakerAvatar: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'><rect width='150' height='150' fill='%2327272a'/><circle cx='75' cy='60' r='30' fill='%23ffffff'/><path d='M35,130 C35,100 115,100 115,130' stroke='%23ffffff' stroke-width='8' fill='none'/></svg>"
+};
