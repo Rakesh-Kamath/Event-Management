@@ -275,7 +275,7 @@ export default function BookingModal({ event, onClose, onSuccess }) {
                 className="w-full py-3 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all shadow-lg flex items-center justify-center gap-2"
               >
                 <Ticket className="w-4 h-4" />
-                Go to My Tickets & Download B&W PDF
+                Go to My Tickets
               </button>
             </div>
           </div>

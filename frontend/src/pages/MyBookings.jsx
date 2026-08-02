@@ -39,7 +39,7 @@ export default function MyBookings() {
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">My Ticket Passes</h1>
           <p className="text-xs text-monochrome-400 font-mono mt-1">
-            Manage your booked events, view digital QR tickets, and download Black & White printable PDF tickets.
+            Manage your booked events, view digital QR tickets, and download printable PDF tickets.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function MyBookings() {
                     className="flex-1 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-monochrome-200 flex items-center justify-center gap-1.5 transition-all shadow-md"
                   >
                     <Download className="w-4 h-4" />
-                    Download B&W PDF Ticket
+                    Download Ticket
                   </button>
                 </div>
 

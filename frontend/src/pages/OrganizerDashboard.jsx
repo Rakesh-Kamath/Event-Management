@@ -15,14 +15,39 @@ import {
   Upload,
   Lock,
   Unlock,
-  Clock
+  Clock,
+  Target,
+  Zap,
+  PieChart as PieChartIcon
 } from 'lucide-react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
+  RadialBarChart, RadialBar, Legend
 } from 'recharts';
 import axios from 'axios';
 import QrScannerModal from '../components/QrScannerModal';
 import VenueAutocomplete from '../components/VenueAutocomplete';
+
+// Custom tooltip for charts
+const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-monochrome-950 border border-monochrome-700 rounded-lg px-3 py-2 shadow-xl">
+        <p className="text-[11px] text-monochrome-400 font-mono mb-1">{label}</p>
+        {payload.map((entry, idx) => (
+          <p key={idx} className="text-xs font-bold text-white font-mono">
+            {entry.name}: {prefix}{typeof entry.value === 'number' ? entry.value.toLocaleString('en-IN') : entry.value}{suffix}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const CHART_COLORS = ['#e4e4e7', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#27272a'];
+const PIE_COLORS = ['#ffffff', '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46'];
 
 export default function OrganizerDashboard() {
   const [analytics, setAnalytics] = useState(null);
@@ -281,100 +306,354 @@ export default function OrganizerDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ============================================= */}
+      {/* KPI METRIC CARDS — 6 cards, 2 rows on mobile  */}
+      {/* ============================================= */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         
-        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800">
-          <div className="flex items-center justify-between text-monochrome-400">
-            <span className="text-[10px] uppercase font-mono tracking-widest">Total Events</span>
-            <Calendar className="w-4 h-4 text-white" />
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Total Events</span>
+            <Calendar className="w-3.5 h-3.5 text-monochrome-500" />
           </div>
-          <p className="text-2xl font-extrabold text-white font-mono mt-2">{metrics.totalEvents || events.length || 0}</p>
-          <span className="text-[11px] text-monochrome-400 font-mono">{metrics.activeEvents || events.filter(e => e.status === 'approved').length} active</span>
+          <p className="text-xl font-extrabold text-white font-mono">{metrics.totalEvents || events.length || 0}</p>
+          <span className="text-[10px] text-emerald-400 font-mono">{metrics.activeEvents || events.filter(e => e.status === 'approved').length} active</span>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800">
-          <div className="flex items-center justify-between text-monochrome-400">
-            <span className="text-[10px] uppercase font-mono tracking-widest">Tickets Sold</span>
-            <Ticket className="w-4 h-4 text-white" />
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Tickets Sold</span>
+            <Ticket className="w-3.5 h-3.5 text-monochrome-500" />
           </div>
-          <p className="text-2xl font-extrabold text-white font-mono mt-2">{metrics.ticketsSold || 0}</p>
-          <span className="text-[11px] text-monochrome-400 font-mono">{metrics.totalBookings || 0} bookings</span>
+          <p className="text-xl font-extrabold text-white font-mono">{metrics.ticketsSold || 0}</p>
+          <span className="text-[10px] text-monochrome-400 font-mono">{metrics.totalBookings || 0} bookings</span>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800">
-          <div className="flex items-center justify-between text-monochrome-400">
-            <span className="text-[10px] uppercase font-mono tracking-widest">Total Revenue (₹)</span>
-            <IndianRupee className="w-4 h-4 text-white" />
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Revenue</span>
+            <IndianRupee className="w-3.5 h-3.5 text-monochrome-500" />
           </div>
-          <p className="text-2xl font-extrabold text-white font-mono mt-2">₹{(metrics.revenueGenerated || 0).toLocaleString('en-IN')}</p>
-          <span className="text-[11px] text-monochrome-400 font-mono">Total earnings</span>
+          <p className="text-xl font-extrabold text-white font-mono">₹{(metrics.revenueGenerated || 0).toLocaleString('en-IN')}</p>
+          <span className="text-[10px] text-monochrome-400 font-mono">Total earnings</span>
         </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800">
-          <div className="flex items-center justify-between text-monochrome-400">
-            <span className="text-[10px] uppercase font-mono tracking-widest">Attendance Rate</span>
-            <Users className="w-4 h-4 text-white" />
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Attendance</span>
+            <Users className="w-3.5 h-3.5 text-monochrome-500" />
           </div>
-          <p className="text-2xl font-extrabold text-white font-mono mt-2">{metrics.attendanceRate || 0}%</p>
-          <span className="text-[11px] text-monochrome-400 font-mono">QR scanned at gate</span>
+          <p className="text-xl font-extrabold text-white font-mono">{metrics.attendanceRate || 0}%</p>
+          <span className="text-[10px] text-monochrome-400 font-mono">QR check-in rate</span>
         </div>
 
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Avg Ticket ₹</span>
+            <Target className="w-3.5 h-3.5 text-monochrome-500" />
+          </div>
+          <p className="text-xl font-extrabold text-white font-mono">₹{(metrics.avgTicketPrice || 0).toLocaleString('en-IN')}</p>
+          <span className="text-[10px] text-monochrome-400 font-mono">Per ticket</span>
+        </div>
+
+        <div className="glass-panel p-4 rounded-2xl border border-monochrome-800">
+          <div className="flex items-center justify-between text-monochrome-400 mb-2">
+            <span className="text-[9px] uppercase font-mono tracking-widest">Rev/Event</span>
+            <Zap className="w-3.5 h-3.5 text-monochrome-500" />
+          </div>
+          <p className="text-xl font-extrabold text-white font-mono">₹{(metrics.avgRevenuePerEvent || 0).toLocaleString('en-IN')}</p>
+          <span className="text-[10px] text-monochrome-400 font-mono">Avg per event</span>
+        </div>
       </div>
 
-      {analytics?.monthlyRevenue && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          <div className="glass-panel p-6 rounded-3xl border border-monochrome-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-monochrome-800 pb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-white" />
-                Monthly Ticket Revenue Velocity (₹)
-              </h3>
-              <span className="text-[10px] font-mono text-monochrome-400">Performance</span>
-            </div>
-
-            <div className="h-60 pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analytics.monthlyRevenue}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="month" stroke="#71717a" fontSize={11} />
-                  <YAxis stroke="#71717a" fontSize={11} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#18181b', borderColor: '#3f3f46', color: '#fff', borderRadius: '8px' }} 
-                  />
-                  <Line type="monotone" dataKey="revenue" stroke="#ffffff" strokeWidth={2.5} dot={{ fill: '#ffffff' }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+      {/* ============================================= */}
+      {/* CHARTS ROW 1: Revenue Trend + Category Donut  */}
+      {/* ============================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        {/* Revenue Trend — Area Chart (spans 2 cols) */}
+        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Revenue & Booking Trend
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">Monthly</span>
           </div>
 
-          <div className="glass-panel p-6 rounded-3xl border border-monochrome-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-monochrome-800 pb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-white" />
-                Tickets Sold by Event Category
-              </h3>
-              <span className="text-[10px] font-mono text-monochrome-400">Distribution</span>
-            </div>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics?.monthlyRevenue || []}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ffffff" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="bookingGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#a1a1aa" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#a1a1aa" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="month" stroke="#52525b" fontSize={10} tickLine={false} />
+                <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip prefix="₹" />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#ffffff" 
+                  strokeWidth={2} 
+                  fill="url(#revenueGradient)" 
+                  name="Revenue"
+                  dot={{ fill: '#ffffff', r: 3, strokeWidth: 0 }}
+                  activeDot={{ r: 5, stroke: '#ffffff', strokeWidth: 2, fill: '#09090b' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="bookings" 
+                  stroke="#71717a" 
+                  strokeWidth={1.5} 
+                  fill="url(#bookingGradient)" 
+                  name="Tickets"
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-            <div className="h-60 pt-2">
+        {/* Category Distribution — Donut Pie Chart */}
+        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <PieChartIcon className="w-4 h-4" />
+              Category Split
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">Tickets</span>
+          </div>
+
+          <div className="h-56 flex items-center justify-center">
+            {analytics?.categoryData && analytics.categoryData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.categoryData || [{ name: 'Cultural', value: 5 }, { name: 'Food & Drinks', value: 3 }]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
-                  <YAxis stroke="#71717a" fontSize={11} />
+                <PieChart>
+                  <Pie
+                    data={analytics.categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {analytics.categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#18181b', borderColor: '#3f3f46', color: '#fff', borderRadius: '8px' }} 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#3f3f46', borderRadius: '8px', fontSize: '11px', color: '#fff' }}
+                    formatter={(value, name) => [`${value} tickets`, name]}
                   />
-                  <Bar dataKey="value" fill="#e4e4e7" radius={[4, 4, 0, 0]} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-monochrome-500 font-mono">No category data yet</p>
+            )}
+          </div>
+          {/* Legend below chart */}
+          {analytics?.categoryData && analytics.categoryData.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
+              {analytics.categoryData.map((entry, idx) => (
+                <div key={entry.name} className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }} />
+                  <span className="text-[10px] text-monochrome-400 font-mono">{entry.name} ({entry.value})</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================= */}
+      {/* CHARTS ROW 2: Top Events + Seat Utilization   */}
+      {/* ============================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        {/* Top Events by Revenue — Horizontal Bar */}
+        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Top Events by Revenue
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">Top 5</span>
+          </div>
+
+          {analytics?.topEventsByRevenue && analytics.topEventsByRevenue.length > 0 ? (
+            <div className="space-y-2.5">
+              {analytics.topEventsByRevenue.map((evt, idx) => {
+                const maxRevenue = analytics.topEventsByRevenue[0]?.revenue || 1;
+                const widthPercent = maxRevenue > 0 ? (evt.revenue / maxRevenue) * 100 : 0;
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-monochrome-200 font-medium truncate max-w-[60%]">{evt.name}</span>
+                      <span className="text-white font-bold font-mono">₹{evt.revenue.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="w-full h-2 bg-monochrome-900 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-monochrome-400 to-white rounded-full transition-all duration-700"
+                        style={{ width: `${widthPercent}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-monochrome-500 font-mono">{evt.tickets} tickets sold</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-monochrome-500 font-mono">No revenue data yet</div>
+          )}
+        </div>
+
+        {/* Seat Utilization — Stacked Bar */}
+        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Seat Utilization
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">By event</span>
+          </div>
+
+          {analytics?.seatUtilization && analytics.seatUtilization.length > 0 ? (
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.seatUtilization} layout="vertical" barSize={14}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+                  <XAxis type="number" stroke="#52525b" fontSize={10} tickLine={false} />
+                  <YAxis type="category" dataKey="name" stroke="#52525b" fontSize={9} tickLine={false} width={100} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#3f3f46', borderRadius: '8px', fontSize: '11px', color: '#fff' }}
+                    formatter={(value, name) => [value, name === 'booked' ? 'Booked' : 'Available']}
+                  />
+                  <Bar dataKey="booked" stackId="seats" fill="#e4e4e7" radius={[0, 0, 0, 0]} name="Booked" />
+                  <Bar dataKey="available" stackId="seats" fill="#27272a" radius={[0, 4, 4, 0]} name="Available" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-monochrome-500 font-mono">No seat data yet</div>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================= */}
+      {/* CHARTS ROW 3: Daily Trend + Free/Paid Split   */}
+      {/* ============================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        {/* Daily Booking Trend — Area chart (30 days) */}
+        <div className="lg:col-span-2 glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Booking Trend
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">Last 30 days</span>
           </div>
 
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics?.dailyBookingTrend || []}>
+                <defs>
+                  <linearGradient id="dailyGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#d4d4d8" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#d4d4d8" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#52525b" 
+                  fontSize={9} 
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#09090b', borderColor: '#3f3f46', borderRadius: '8px', fontSize: '11px', color: '#fff' }}
+                  formatter={(value) => [`${value} tickets`, 'Bookings']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="tickets" 
+                  stroke="#d4d4d8" 
+                  strokeWidth={2} 
+                  fill="url(#dailyGradient)"
+                  dot={false}
+                  activeDot={{ r: 4, stroke: '#d4d4d8', strokeWidth: 2, fill: '#09090b' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      )}
 
+        {/* Free vs Paid — Donut */}
+        <div className="glass-panel p-5 rounded-2xl border border-monochrome-800 space-y-3">
+          <div className="flex items-center justify-between border-b border-monochrome-800 pb-2.5">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Ticket className="w-4 h-4" />
+              Free vs Paid
+            </h3>
+            <span className="text-[10px] font-mono text-monochrome-500">Tickets</span>
+          </div>
+
+          <div className="h-48 flex items-center justify-center">
+            {analytics?.freePaidSplit && (analytics.freePaidSplit[0]?.value > 0 || analytics.freePaidSplit[1]?.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analytics.freePaidSplit}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={4}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    <Cell fill="#71717a" />
+                    <Cell fill="#ffffff" />
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#3f3f46', borderRadius: '8px', fontSize: '11px', color: '#fff' }}
+                    formatter={(value, name) => [`${value} tickets`, name]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-monochrome-500 font-mono">No ticket data yet</p>
+            )}
+          </div>
+          {analytics?.freePaidSplit && (analytics.freePaidSplit[0]?.value > 0 || analytics.freePaidSplit[1]?.value > 0) && (
+            <div className="flex items-center justify-center gap-5 pt-1">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-monochrome-500" />
+                <span className="text-[11px] text-monochrome-400 font-mono">Free ({analytics.freePaidSplit[0]?.value || 0})</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                <span className="text-[11px] text-monochrome-400 font-mono">Paid ({analytics.freePaidSplit[1]?.value || 0})</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================= */}
+      {/* EVENT MANAGEMENT TABLE                        */}
+      {/* ============================================= */}
       <div className="glass-panel p-6 rounded-3xl border border-monochrome-800 space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-monochrome-800">
           <div>
@@ -486,6 +765,9 @@ export default function OrganizerDashboard() {
         )}
       </div>
 
+      {/* ============================================= */}
+      {/* CREATE EVENT MODAL                            */}
+      {/* ============================================= */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
           <div className="bg-monochrome-950 border border-monochrome-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
@@ -672,6 +954,9 @@ export default function OrganizerDashboard() {
         </div>
       )}
 
+      {/* ============================================= */}
+      {/* EDIT EVENT MODAL                              */}
+      {/* ============================================= */}
       {showEditModal && editFormData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
           <div className="bg-monochrome-950 border border-monochrome-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
@@ -828,6 +1113,9 @@ export default function OrganizerDashboard() {
         <QrScannerModal onClose={() => setShowScannerModal(false)} />
       )}
 
+      {/* ============================================= */}
+      {/* ATTENDEES MODAL                               */}
+      {/* ============================================= */}
       {selectedEventAttendees && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
           <div className="bg-monochrome-950 border border-monochrome-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Printer, Ticket } from 'lucide-react';
+import { Printer, X, Download } from 'lucide-react';
 
 export default function BwPdfTicket({ booking, onClose }) {
   const ticketRef = useRef(null);
@@ -29,35 +29,32 @@ export default function BwPdfTicket({ booking, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
       <div className="bg-monochrome-950 border border-monochrome-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
         
-        {/* Modal Controls */}
+        {/* Modal Controls — hidden when printing */}
         <div className="flex justify-between items-center no-print border-b border-monochrome-800 pb-4">
           <div className="flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-white" />
-            <h3 className="font-bold text-white text-base">Digital PDF Ticket Preview</h3>
-            <span className="text-[10px] font-mono bg-white text-black px-2 py-0.5 rounded font-bold">
-              BLACK & WHITE THEME
-            </span>
+            <Download className="w-5 h-5 text-white" />
+            <h3 className="font-bold text-white text-base">Ticket Preview</h3>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
               className="px-4 py-2 rounded-lg bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all flex items-center gap-1.5 shadow-md"
             >
               <Printer className="w-4 h-4" />
-              Print / Save PDF Ticket
+              Print / Save as PDF
             </button>
 
             <button
               onClick={onClose}
-              className="px-3 py-2 rounded-lg bg-monochrome-900 border border-monochrome-700 text-monochrome-300 hover:text-white text-xs font-semibold"
+              className="p-2 rounded-lg bg-monochrome-900 border border-monochrome-700 text-monochrome-300 hover:text-white hover:bg-monochrome-800 transition-all"
             >
-              Close
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* PRINTABLE TICKET CONTAINER (STRICT BLACK & WHITE THEME) */}
+        {/* PRINTABLE TICKET CONTAINER */}
         <div 
           ref={ticketRef}
           className="printable-ticket bg-white text-black p-8 rounded-xl border-4 border-black space-y-6 shadow-2xl relative overflow-hidden font-sans"
