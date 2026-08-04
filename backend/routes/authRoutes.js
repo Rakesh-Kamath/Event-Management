@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import { generateToken, protect } from '../middleware/authMiddleware.js';
 
@@ -89,6 +90,94 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Login error' });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: 'Credential is required' });
+    }
+
+    let payload;
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+
+    // Check if real client_id is not set, fallback to Mock/Developer Mode
+    if (!client_id) {
+      if (credential.startsWith('mock_token_')) {
+        const email = credential.replace('mock_token_', '').toLowerCase();
+        payload = {
+          email,
+          name: email.split('@')[0],
+          picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
+          sub: `mock_google_id_${email}`
+        };
+      } else {
+        return res.status(500).json({ message: 'GOOGLE_CLIENT_ID is not configured in backend/.env' });
+      }
+    } else {
+      try {
+        const client = new OAuth2Client(client_id);
+        const ticket = await client.verifyIdToken({
+          idToken: credential,
+          audience: client_id,
+        });
+        payload = ticket.getPayload();
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid Google token' });
+      }
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (user) {
+      if (user.isBlocked || user.status === 'blocked') {
+        return res.status(403).json({ message: 'Account is suspended. Please contact administrator.' });
+      }
+      let updated = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        updated = true;
+      }
+      if (picture && (user.avatar === 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop' || !user.avatar)) {
+        user.avatar = picture;
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
+    } else {
+      // Create a new participant user
+      user = await User.create({
+        name,
+        email: email.toLowerCase(),
+        role: 'participant',
+        googleId,
+        avatar: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
+        isApproved: true,
+        status: 'active'
+      });
+    }
+
+    const token = generateToken(user._id, user.role);
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        organizationName: user.organizationName,
+        isApproved: user.isApproved,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Google authentication error' });
   }
 });
 

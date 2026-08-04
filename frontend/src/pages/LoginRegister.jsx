@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
@@ -15,6 +15,86 @@ export default function LoginRegister() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [mockEmail, setMockEmail] = useState('participant@demo.com');
+
+  const handleGoogleLoginResponse = async (response) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('/api/auth/google', {
+        credential: response.credential
+      });
+      login(res.data.token, res.data.user);
+      
+      if (res.data.user.role === 'admin') navigate('/admin');
+      else if (res.data.user.role === 'organizer') navigate('/organizer');
+      else navigate('/my-bookings');
+    } catch (err) {
+      console.error('Google Login Error:', err);
+      setError(err.response?.data?.message || err.message || 'Google Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMockGoogleLogin = async () => {
+    if (!mockEmail) {
+      setError('Please enter a mock email address');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('/api/auth/google', {
+        credential: `mock_token_${mockEmail.trim()}`
+      });
+      login(res.data.token, res.data.user);
+      
+      if (res.data.user.role === 'admin') navigate('/admin');
+      else if (res.data.user.role === 'organizer') navigate('/organizer');
+      else navigate('/my-bookings');
+    } catch (err) {
+      console.error('Mock Google Login Error:', err);
+      setError(err.response?.data?.message || err.message || 'Mock Google Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    let intervalId;
+    const initializeGoogleSignIn = () => {
+      if (typeof google !== 'undefined') {
+        try {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleLoginResponse
+          });
+          const buttonElement = document.getElementById("googleSignInDiv");
+          if (buttonElement) {
+            google.accounts.id.renderButton(
+              buttonElement,
+              { theme: "outline", size: "large" }
+            );
+            if (intervalId) clearInterval(intervalId);
+          }
+        } catch (err) {
+          console.error('Failed to render Google Sign-In button:', err);
+        }
+      }
+    };
+
+    initializeGoogleSignIn();
+    intervalId = setInterval(initializeGoogleSignIn, 500);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isRegister]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -127,6 +207,44 @@ export default function LoginRegister() {
             )}
           </button>
         </form>
+
+        <div className="relative flex items-center justify-center my-4">
+          <div className="border-t border-monochrome-800 w-full"></div>
+          <span className="bg-monochrome-950 px-3 text-xs text-monochrome-500 font-mono absolute">OR</span>
+        </div>
+
+        <div className="space-y-3">
+          {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            <div id="googleSignInDiv" className="w-full flex justify-center"></div>
+          )}
+
+          {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            <div className="space-y-2">
+              <div className="bg-monochrome-900 border border-dashed border-monochrome-700 rounded-xl p-3 text-center space-y-2">
+                <p className="text-[10px] font-mono text-monochrome-400">
+                  ⚠️ Google Client ID not set.<br />
+                  Use Developer Mock Mode to test:
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="mock.user@gmail.com"
+                    value={mockEmail}
+                    onChange={(e) => setMockEmail(e.target.value)}
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-monochrome-950 border border-monochrome-800 text-[11px] text-white focus:outline-none focus:border-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleMockGoogleLogin}
+                    className="px-3 py-1.5 bg-white text-black text-[11px] font-extrabold rounded-lg hover:bg-monochrome-200 transition-colors"
+                  >
+                    Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="text-center pt-2">
           <button

@@ -1,4 +1,7 @@
 import express from 'express';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
 import Booking from '../models/Booking.js';
 import Event from '../models/Event.js';
 import Ticket from '../models/Ticket.js';
@@ -6,7 +9,17 @@ import Notification from '../models/Notification.js';
 import { generateQRCode } from '../utils/qrHelper.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
+dotenv.config();
+
 const router = express.Router();
+
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+}
 
 const generateBookingCode = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -42,10 +55,28 @@ router.post('/create-order', protect, async (req, res) => {
     const orderId = `ORDER-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const totalAmount = event.ticketPrice * count;
 
+    let rzpOrderId = null;
+    // If Razorpay keys are configured, create a real Razorpay Order
+    if (razorpay && totalAmount > 0) {
+      try {
+        const options = {
+          amount: totalAmount * 100, // amount in the smallest currency unit (paise)
+          currency: "INR",
+          receipt: orderId
+        };
+        const rzpOrder = await razorpay.orders.create(options);
+        rzpOrderId = rzpOrder.id;
+      } catch (err) {
+        console.error('Razorpay Order Creation Failed:', err);
+        return res.status(500).json({ message: 'Razorpay order creation failed: ' + err.message });
+      }
+    }
+
     res.json({
-      orderId,
+      orderId: rzpOrderId || orderId,
+      isRazorpayActive: !!razorpay && totalAmount > 0,
       amount: totalAmount,
-      currency: 'USD',
+      currency: 'INR',
       eventId: event._id,
       seatsBooked: count,
       message: 'Order created successfully'
@@ -59,7 +90,18 @@ router.post('/create-order', protect, async (req, res) => {
 // @desc    Verify payment signature, decrement availableSeats, generate Ticket & QR code
 router.post('/verify-payment', protect, async (req, res) => {
   try {
-    const { eventId, seatsBooked = 1, ticketsCount = 1, paymentMethod = 'card', paymentId, attendeeName, attendeePhone } = req.body;
+    const { 
+      eventId, 
+      seatsBooked = 1, 
+      ticketsCount = 1, 
+      paymentMethod = 'card', 
+      paymentId, 
+      attendeeName, 
+      attendeePhone,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature
+    } = req.body;
     const count = seatsBooked || ticketsCount || 1;
 
     const event = await Event.findById(eventId);
@@ -71,11 +113,27 @@ router.post('/verify-payment', protect, async (req, res) => {
       return res.status(400).json({ message: 'Seats are no longer available for this event.' });
     }
 
+    const totalAmount = event.ticketPrice * count;
+
+    // Verify Razorpay signature if credentials are set and it was a paid booking
+    if (razorpay && totalAmount > 0) {
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+        return res.status(400).json({ message: 'Razorpay payment details are missing.' });
+      }
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest('hex');
+
+      if (expectedSignature !== razorpay_signature) {
+        return res.status(400).json({ message: 'Payment verification failed: invalid signature.' });
+      }
+    }
+
     const bookingNumber = generateBookingCode();
     const verificationCode = `VERIFY-${bookingNumber}-${Date.now().toString(36).toUpperCase()}`;
-    const txnPaymentId = paymentId || `PAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const totalAmount = event.ticketPrice * count;
+    const txnPaymentId = razorpay_payment_id || paymentId || `PAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const booking = await Booking.create({
       bookingNumber,
@@ -88,7 +146,7 @@ router.post('/verify-payment', protect, async (req, res) => {
       unitPrice: event.ticketPrice,
       totalAmount,
       paymentStatus: 'successful',
-      paymentMethod,
+      paymentMethod: razorpay_payment_id ? 'razorpay' : paymentMethod,
       paymentId: txnPaymentId,
       verificationCode,
       attendeeName: attendeeName || req.user.name,

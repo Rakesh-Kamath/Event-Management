@@ -20,14 +20,123 @@ export default function BookingModal({ event, onClose, onSuccess }) {
   const unitPrice = event.ticketPrice;
   const totalAmount = unitPrice * ticketsCount;
 
-  const handleProceedToPayment = (e) => {
+  const handleProceedToPayment = async (e) => {
     e.preventDefault();
     if (!attendeeName.trim()) {
       setError('Please enter attendee full name');
       return;
     }
     setError('');
-    setStep(2);
+    setLoading(true);
+
+    try {
+      console.log('[BookingModal Diagnostics] Initiating payment for:', {
+        eventTitle: event.title,
+        ticketPrice: event.ticketPrice,
+        ticketsCount,
+        totalAmount
+      });
+
+      // Step 1: Create Order on backend (gets Razorpay order ID if credentials exist)
+      const orderRes = await axios.post('/api/bookings/create-order', {
+        eventId: event._id,
+        seatsBooked: ticketsCount,
+        ticketsCount: ticketsCount
+      });
+
+      const orderData = orderRes.data;
+      console.log('[BookingModal Diagnostics] Order response received:', orderData);
+
+      // If Razorpay is active on backend, launch Razorpay Checkout directly!
+      if (orderData.isRazorpayActive) {
+        if (typeof window.Razorpay === 'undefined') {
+          setError('Razorpay SDK failed to load. Please refresh the page and try again.');
+          setLoading(false);
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: orderData.amount * 100, // paise
+          currency: orderData.currency || 'INR',
+          name: "Evently",
+          description: `Ticket purchase for ${event.title}`,
+          order_id: orderData.orderId,
+          handler: async function (response) {
+            setLoading(true);
+            try {
+              const verifyRes = await axios.post('/api/bookings/verify-payment', {
+                eventId: event._id,
+                seatsBooked: ticketsCount,
+                ticketsCount: ticketsCount,
+                attendeeName,
+                attendeePhone,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              });
+
+              setConfirmedBooking(verifyRes.data.booking);
+              setStep(3);
+              if (onSuccess) onSuccess(verifyRes.data.booking);
+            } catch (verifyErr) {
+              setError(verifyErr.response?.data?.message || 'Payment verification failed.');
+            } finally {
+              setLoading(false);
+            }
+          },
+          prefill: {
+            name: attendeeName,
+            email: user?.email || '',
+            contact: attendeePhone || ''
+          },
+          theme: {
+            color: "#000000"
+          },
+          modal: {
+            ondismiss: function () {
+              setLoading(false);
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          setError(response.error.description || 'Payment failed.');
+          setLoading(false);
+        });
+        rzp.open();
+      } else {
+        // Razorpay is not active (mock mode or free event)
+        if (totalAmount === 0) {
+          // Free event: confirm booking directly
+          try {
+            const res = await axios.post('/api/bookings/verify-payment', {
+              eventId: event._id,
+              ticketsCount,
+              seatsBooked: ticketsCount,
+              paymentMethod: 'free',
+              attendeeName,
+              attendeePhone
+            });
+            setConfirmedBooking(res.data.booking);
+            setStep(3);
+            if (onSuccess) onSuccess(res.data.booking);
+          } catch (err) {
+            setError(err.response?.data?.message || 'Booking reservation failed.');
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          // Paid event but Razorpay keys not set: go to Step 2 Simulated Gateway
+          setLoading(false);
+          setStep(2);
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to initialize booking transaction.');
+      setLoading(false);
+    }
   };
 
   const handleConfirmBooking = async () => {
@@ -139,6 +248,10 @@ export default function BookingModal({ event, onClose, onSuccess }) {
               </div>
             </div>
 
+            {error && (
+              <p className="text-xs text-red-400 bg-red-950/50 p-2.5 rounded-xl border border-red-800">{error}</p>
+            )}
+
             {/* Total Summary in ₹ Rupees */}
             <div className="pt-3 border-t border-monochrome-800 flex justify-between items-center">
               <div>
@@ -150,9 +263,17 @@ export default function BookingModal({ event, onClose, onSuccess }) {
 
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all shadow-lg"
+                disabled={loading}
+                className="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all shadow-lg flex items-center justify-center gap-2"
               >
-                Proceed to Payment →
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Proceed to Payment →'
+                )}
               </button>
             </div>
           </form>
