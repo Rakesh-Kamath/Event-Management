@@ -8,6 +8,11 @@ import Ticket from '../models/Ticket.js';
 import Notification from '../models/Notification.js';
 import { generateQRCode } from '../utils/qrHelper.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { 
+  sendBookingConfirmationEmail, 
+  sendPaymentSuccessEmail, 
+  sendTicketDownloadEmail 
+} from '../utils/emailService.js';
 
 dotenv.config();
 
@@ -187,6 +192,38 @@ router.post('/verify-payment', protect, async (req, res) => {
     });
 
     await booking.populate('eventId event', 'title bannerUrl dateTime venue venueName address city ticketPrice');
+
+    // Trigger transactional emails asynchronously without blocking the response
+    (async () => {
+      try {
+        await sendBookingConfirmationEmail({
+          email: req.user.email,
+          name: req.user.name,
+          event: booking.event || booking.eventId,
+          booking
+        });
+
+        // If it was a paid event, send payment invoice receipt
+        if (booking.totalAmount > 0) {
+          await sendPaymentSuccessEmail({
+            email: req.user.email,
+            name: req.user.name,
+            event: booking.event || booking.eventId,
+            booking
+          });
+        }
+
+        // Send ticket download link
+        await sendTicketDownloadEmail({
+          email: req.user.email,
+          name: req.user.name,
+          event: booking.event || booking.eventId,
+          booking
+        });
+      } catch (emailErr) {
+        console.error('[Nodemailer Trigger Error]:', emailErr.message);
+      }
+    })();
 
     res.status(201).json({
       message: 'Payment verified and ticket generated successfully!',

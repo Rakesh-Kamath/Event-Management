@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import { generateToken, protect } from '../middleware/authMiddleware.js';
+import { sendWelcomeEmail, sendOTPEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -23,6 +24,9 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     const userRole = role === 'organizer' ? 'organizer' : 'participant';
 
+    // Generate 6-digit numeric signup OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -31,12 +35,68 @@ router.post('/register', async (req, res) => {
       organizationName: organizationName || '',
       phone: phone || '',
       isApproved: true,
-      status: 'active'
+      status: 'active',
+      isVerified: false,
+      otp,
+      otpExpires: new Date(Date.now() + 15 * 60 * 1000) // 15 mins expiry
     });
+
+    // Send OTP verification email asynchronously
+    (async () => {
+      try {
+        await sendOTPEmail({ email: user.email, name: user.name, otp });
+      } catch (err) {
+        console.error('[Nodemailer Signup OTP Error]:', err.message);
+      }
+    })();
+
+    res.status(201).json({
+      requireVerification: true,
+      email: user.email,
+      message: 'A verification code has been sent to your email.'
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Server authentication error' });
+  }
+});
+
+// @route   POST /api/auth/verify-signup-otp
+// @desc    Verify signup OTP, activate user, and return token
+router.post('/verify-signup-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Please provide email and verification code' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    if (!user.otp || user.otp !== otp || !user.otpExpires || user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    // Activate user and clear OTP
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    // Send welcome email now that their address is verified!
+    (async () => {
+      try {
+        await sendWelcomeEmail({ email: user.email, name: user.name });
+      } catch (err) {
+        console.error('[Nodemailer Welcome Error]:', err.message);
+      }
+    })();
 
     const token = generateToken(user._id, user.role);
 
-    res.status(201).json({
+    res.json({
       token,
       user: {
         id: user._id,
@@ -44,11 +104,12 @@ router.post('/register', async (req, res) => {
         email: user.email,
         role: user.role,
         organizationName: user.organizationName,
-        isApproved: user.isApproved
+        isApproved: user.isApproved,
+        avatar: user.avatar
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Server authentication error' });
+    res.status(500).json({ message: error.message || 'Signup verification error' });
   }
 });
 
@@ -69,10 +130,92 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ message: 'Account is suspended. Please contact administrator.' });
     }
 
+    // Prevent bcrypt crash if account was created via Google and has no password
+    if (!user.password) {
+      return res.status(400).json({ 
+        message: 'This account was registered using Google. Please log in using the Google button.' 
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
+    // If the account is not verified, require verification OTP instead of normal 2FA
+    if (!user.isVerified) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otp = otp;
+      user.otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+      await user.save();
+
+      (async () => {
+        try {
+          await sendOTPEmail({ email: user.email, name: user.name, otp });
+        } catch (err) {
+          console.error('[Nodemailer Signup Verification Resend Error]:', err.message);
+        }
+      })();
+
+      return res.json({
+        requireVerification: true,
+        email: user.email,
+        message: 'Your account is not verified yet. A verification passcode has been sent to your email.'
+      });
+    }
+
+    // Generate 6-digit numeric OTP for 2FA
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 mins
+    await user.save();
+
+    // Send OTP email asynchronously
+    (async () => {
+      try {
+        await sendOTPEmail({ email: user.email, name: user.name, otp });
+      } catch (err) {
+        console.error('[Nodemailer OTP Email Error]:', err.message);
+      }
+    })();
+
+    res.json({
+      requireOTP: true,
+      email: user.email,
+      message: 'Verification code sent to your registered email address'
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Login error' });
+  }
+});
+
+// @route   POST /api/auth/verify-login-otp
+// @desc    Verify login OTP and issue token
+router.post('/verify-login-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Please provide email and verification code' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    if (user.isBlocked || user.status === 'blocked') {
+      return res.status(403).json({ message: 'Account is suspended. Please contact administrator.' });
+    }
+
+    if (!user.otp || user.otp !== otp || !user.otpExpires || user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    // Clear OTP from database
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
 
     const token = generateToken(user._id, user.role);
 
@@ -89,7 +232,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Login error' });
+    res.status(500).json({ message: error.message || 'OTP verification error' });
   }
 });
 
@@ -149,18 +292,28 @@ router.post('/google', async (req, res) => {
       if (updated) {
         await user.save();
       }
-    } else {
-      // Create a new participant user
-      user = await User.create({
-        name,
-        email: email.toLowerCase(),
-        role: 'participant',
-        googleId,
-        avatar: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-        isApproved: true,
-        status: 'active'
-      });
-    }
+      } else {
+        // Create a new participant user
+        user = await User.create({
+          name,
+          email: email.toLowerCase(),
+          role: 'participant',
+          googleId,
+          avatar: picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
+          isApproved: true,
+          status: 'active',
+          isVerified: true
+        });
+
+        // Send welcome email asynchronously for Google Sign-up
+        (async () => {
+          try {
+            await sendWelcomeEmail({ email: user.email, name: user.name });
+          } catch (err) {
+            console.error('[Nodemailer Google Welcome Error]:', err.message);
+          }
+        })();
+      }
 
     const token = generateToken(user._id, user.role);
 

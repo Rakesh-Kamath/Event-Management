@@ -1,7 +1,9 @@
 import express from 'express';
 import Event from '../models/Event.js';
+import Booking from '../models/Booking.js';
 import Notification from '../models/Notification.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { sendEventUpdateEmail, sendEventReminderEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 
@@ -237,6 +239,28 @@ router.put('/:id', protect, authorize('organizer', 'admin'), async (req, res) =>
     }
 
     await event.save();
+
+    // Send update email to all booked participants asynchronously
+    (async () => {
+      try {
+        const bookings = await Booking.find({ eventId: event._id, paymentStatus: 'successful' });
+        const updateMessage = `The details for "${event.title}" have been updated by the organizer. Please review the updated schedule or venue details.`;
+        for (const b of bookings) {
+          if (b.attendeeEmail) {
+            await sendEventUpdateEmail({
+              email: b.attendeeEmail,
+              name: b.attendeeName,
+              event,
+              message: updateMessage,
+              updateType: 'update'
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[Event Update Email Error]:', err.message);
+      }
+    })();
+
     res.json({ message: 'Event updated successfully', event });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Error updating event' });
@@ -283,9 +307,72 @@ router.patch('/:id/cancel', protect, authorize('organizer', 'admin'), async (req
     event.status = 'cancelled';
     await event.save();
 
+    // Send cancellation email to all booked participants asynchronously
+    (async () => {
+      try {
+        const bookings = await Booking.find({ eventId: event._id, paymentStatus: 'successful' });
+        const cancelMessage = `We regret to inform you that the event "${event.title}" has been cancelled by the organizer. If you paid for this ticket, a refund will be processed shortly.`;
+        for (const b of bookings) {
+          if (b.attendeeEmail) {
+            await sendEventUpdateEmail({
+              email: b.attendeeEmail,
+              name: b.attendeeName,
+              event,
+              message: cancelMessage,
+              updateType: 'cancel'
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[Event Cancel Email Error]:', err.message);
+      }
+    })();
+
     res.json({ message: 'Event cancelled successfully', event });
   } catch (error) {
     res.status(500).json({ message: 'Error cancelling event' });
+  }
+});
+
+// @route   POST /api/events/:id/reminders
+// @desc    Send manual email reminders to all attendees of an event (organizer/admin only)
+router.post('/:id/reminders', protect, authorize('organizer', 'admin'), async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (req.user.role !== 'admin' && event.organizerId.toString() !== req.user._id.toString() && event.organizer?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized to send reminders for this event' });
+    }
+
+    const bookings = await Booking.find({ eventId: event._id, paymentStatus: 'successful' });
+
+    if (bookings.length === 0) {
+      return res.json({ message: 'No registered attendees to remind.', count: 0 });
+    }
+
+    // Send reminders asynchronously
+    (async () => {
+      try {
+        for (const b of bookings) {
+          if (b.attendeeEmail) {
+            await sendEventReminderEmail({
+              email: b.attendeeEmail,
+              name: b.attendeeName,
+              event
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[Event Reminder Email Error]:', err.message);
+      }
+    })();
+
+    res.json({ message: `Reminder emails are being sent to ${bookings.length} attendee(s).`, count: bookings.length });
+  } catch (error) {
+    res.status(500).json({ message: 'Error processing reminders: ' + error.message });
   }
 });
 

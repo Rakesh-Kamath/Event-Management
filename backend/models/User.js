@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema({
   isApproved: { type: Boolean, default: true },
   status: { type: String, enum: ['active', 'blocked'], default: 'active' },
   isBlocked: { type: Boolean, default: false },
-  avatar: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop' }
+  avatar: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop' },
+  otp: { type: String, default: null },
+  otpExpires: { type: Date, default: null },
+  isVerified: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.models.User || mongoose.model('User', userSchema);
