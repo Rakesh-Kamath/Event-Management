@@ -168,7 +168,7 @@ export default function BookingModal({ event, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="bg-monochrome-950 border border-monochrome-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl relative">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-monochrome-800 bg-monochrome-900/50">
           <div className="flex items-center gap-2">
@@ -177,9 +177,9 @@ export default function BookingModal({ event, onClose, onSuccess }) {
               {step === 3 ? 'Booking Confirmed!' : 'Ticket Reservation'}
             </h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="p-1 rounded-lg text-monochrome-400 hover:text-white hover:bg-monochrome-800"
+            className="p-1 rounded-lg text-monochrome-500 hover:text-brand hover:bg-monochrome-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -189,16 +189,16 @@ export default function BookingModal({ event, onClose, onSuccess }) {
         {step === 1 && (
           <form onSubmit={handleProceedToPayment} className="p-6 space-y-5">
             <div>
-              <h4 className="text-xs uppercase tracking-wider font-mono text-monochrome-400">Event</h4>
-              <p className="text-white font-bold text-base mt-0.5">{event.title}</p>
-              <p className="text-xs text-monochrome-400">{venueName}, {city}, India</p>
+              <h4 className="text-xs uppercase tracking-wider font-mono text-monochrome-500">Event</h4>
+              <p className="text-monochrome-100 font-bold text-base mt-0.5">{event.title}</p>
+              <p className="text-xs text-monochrome-500">{venueName}, {city}, India</p>
             </div>
 
             {/* Ticket Quantity Selector */}
-            <div className="p-4 rounded-xl bg-monochrome-900 border border-monochrome-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-monochrome-800 border border-monochrome-700 flex items-center justify-between">
               <div>
-                <label className="text-xs font-semibold text-white block">Number of Tickets</label>
-                <span className="text-[11px] text-monochrome-400 font-mono">
+                <label className="text-xs font-semibold text-monochrome-100 block">Number of Tickets</label>
+                <span className="text-[11px] text-monochrome-500 font-mono">
                   {event.availableSeats} seats remaining
                 </span>
               </div>
@@ -207,15 +207,15 @@ export default function BookingModal({ event, onClose, onSuccess }) {
                 <button
                   type="button"
                   onClick={() => setTicketsCount(Math.max(1, ticketsCount - 1))}
-                  className="w-7 h-7 rounded bg-monochrome-800 hover:bg-white hover:text-black text-white flex items-center justify-center font-bold text-sm"
+                  className="w-7 h-7 rounded bg-monochrome-900 border border-monochrome-700 hover:bg-brand hover:text-white text-monochrome-100 flex items-center justify-center font-bold text-sm"
                 >
                   -
                 </button>
-                <span className="font-mono font-bold text-white px-2">{ticketsCount}</span>
+                <span className="font-mono font-bold text-monochrome-100 px-2">{ticketsCount}</span>
                 <button
                   type="button"
                   onClick={() => setTicketsCount(Math.min(event.availableSeats, ticketsCount + 1))}
-                  className="w-7 h-7 rounded bg-monochrome-800 hover:bg-white hover:text-black text-white flex items-center justify-center font-bold text-sm"
+                  className="w-7 h-7 rounded bg-monochrome-900 border border-monochrome-700 hover:bg-brand hover:text-white text-monochrome-100 flex items-center justify-center font-bold text-sm"
                 >
                   +
                 </button>
@@ -225,38 +225,38 @@ export default function BookingModal({ event, onClose, onSuccess }) {
             {/* Attendee Details */}
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-monochrome-300 block mb-1">Attendee Name</label>
+                <label className="text-xs font-semibold text-monochrome-200 block mb-1">Attendee Name</label>
                 <input
                   type="text"
                   required
                   value={attendeeName}
                   onChange={(e) => setAttendeeName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-monochrome-900 border border-monochrome-700 text-white text-xs focus:outline-none focus:border-white"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-monochrome-900 border border-monochrome-700 text-monochrome-100 text-xs focus:outline-none focus:border-brand/70"
                   placeholder="Full Name"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-monochrome-300 block mb-1">Phone Number (Optional)</label>
+                <label className="text-xs font-semibold text-monochrome-200 block mb-1">Phone Number (Optional)</label>
                 <input
                   type="tel"
                   value={attendeePhone}
                   onChange={(e) => setAttendeePhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-monochrome-900 border border-monochrome-700 text-white text-xs focus:outline-none focus:border-white"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-monochrome-900 border border-monochrome-700 text-monochrome-100 text-xs focus:outline-none focus:border-brand/70"
                   placeholder="+91 98765 43210"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-950/50 p-2.5 rounded-xl border border-red-800">{error}</p>
+              <p className="text-xs text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-200">{error}</p>
             )}
 
             {/* Total Summary in ₹ Rupees */}
-            <div className="pt-3 border-t border-monochrome-800 flex justify-between items-center">
+            <div className="pt-3 border-t border-monochrome-700 flex justify-between items-center">
               <div>
-                <span className="text-xs text-monochrome-400">Total Price</span>
-                <p className="text-xl font-bold font-mono text-white">
+                <span className="text-xs text-monochrome-500">Total Price</span>
+                <p className="text-xl font-bold font-mono text-brand">
                   {totalAmount === 0 ? 'FREE' : `₹${totalAmount.toLocaleString('en-IN')}`}
                 </p>
               </div>
@@ -264,7 +264,7 @@ export default function BookingModal({ event, onClose, onSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all shadow-lg flex items-center justify-center gap-2"
+                className="px-6 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -282,30 +282,29 @@ export default function BookingModal({ event, onClose, onSuccess }) {
         {/* Step 2: Payment Gateway Simulation (UPI / Card / NetBanking) */}
         {step === 2 && (
           <div className="p-6 space-y-5">
-            <div className="p-4 rounded-xl bg-monochrome-900 border border-monochrome-800 text-center">
-              <span className="text-[10px] uppercase tracking-widest text-monochrome-400 font-mono">Payment Gateway Simulation (INR ₹)</span>
-              <h4 className="text-2xl font-bold font-mono text-white mt-1">
+            <div className="p-4 rounded-xl bg-monochrome-800 border border-monochrome-700 text-center">
+              <span className="text-[10px] uppercase tracking-widest text-monochrome-550 font-mono">Payment Gateway Simulation (INR ₹)</span>
+              <h4 className="text-2xl font-bold font-mono text-monochrome-100 mt-1">
                 {totalAmount === 0 ? 'FREE RESERVATION' : `₹${totalAmount.toLocaleString('en-IN')}`}
               </h4>
-              <p className="text-xs text-monochrome-400 mt-0.5">
+              <p className="text-xs text-monochrome-500 mt-0.5">
                 {ticketsCount} Ticket(s) for {event.title}
               </p>
             </div>
 
             {totalAmount > 0 && (
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-monochrome-300 block">Select Indian Payment Method</label>
+                <label className="text-xs font-semibold text-monochrome-200 block">Select Indian Payment Method</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['upi', 'card', 'netbanking'].map((method) => (
                     <button
                       key={method}
                       type="button"
                       onClick={() => setPaymentMethod(method)}
-                      className={`p-3 rounded-lg border text-xs font-mono uppercase transition-all ${
-                        paymentMethod === method
-                          ? 'border-white bg-monochrome-800 text-white font-bold'
-                          : 'border-monochrome-800 bg-monochrome-900 text-monochrome-400 hover:text-white'
-                      }`}
+                      className={`p-3 rounded-lg border text-xs font-mono uppercase transition-all ${paymentMethod === method
+                          ? 'border-brand bg-brand text-white font-bold shadow shadow-brand/10'
+                          : 'border-monochrome-700 bg-monochrome-900 text-monochrome-350 hover:text-brand hover:border-brand/40'
+                        }`}
                     >
                       {method}
                     </button>
@@ -315,14 +314,14 @@ export default function BookingModal({ event, onClose, onSuccess }) {
             )}
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-950/50 p-2.5 rounded border border-red-800">{error}</p>
+              <p className="text-xs text-red-500 bg-red-500/10 p-2.5 rounded border border-red-200">{error}</p>
             )}
 
             <div className="flex gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="flex-1 py-2.5 rounded-xl border border-monochrome-700 text-monochrome-300 hover:text-white text-xs font-semibold"
+                className="flex-1 py-2.5 rounded-xl border border-monochrome-700 bg-monochrome-900 text-monochrome-300 hover:text-brand hover:bg-brand/5 text-xs font-semibold"
               >
                 ← Back
               </button>
@@ -331,7 +330,7 @@ export default function BookingModal({ event, onClose, onSuccess }) {
                 type="button"
                 onClick={handleConfirmBooking}
                 disabled={loading}
-                className="flex-1 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all flex items-center justify-center gap-2 shadow-lg"
+                className="flex-1 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/10"
               >
                 {loading ? (
                   <>
@@ -352,36 +351,36 @@ export default function BookingModal({ event, onClose, onSuccess }) {
         {/* Step 3: Success & Digital Ticket Preview */}
         {step === 3 && confirmedBooking && (
           <div className="p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center mx-auto shadow-lg shadow-brand/10">
               <CheckCircle2 className="w-7 h-7" />
             </div>
 
             <div>
-              <h4 className="text-xl font-bold text-white">Booking Confirmed!</h4>
-              <p className="text-xs text-monochrome-400 mt-1">
-                Your ticket has been issued. Ticket ID: <strong className="font-mono text-white">{confirmedBooking.bookingNumber}</strong>
+              <h4 className="text-xl font-bold text-monochrome-100">Booking Confirmed!</h4>
+              <p className="text-xs text-monochrome-500 mt-1">
+                Your ticket has been issued. Ticket ID: <strong className="font-mono text-brand">{confirmedBooking.bookingNumber}</strong>
               </p>
             </div>
 
             {/* QR Ticket Preview Card */}
-            <div className="p-4 rounded-2xl bg-white text-black text-left space-y-3 shadow-2xl border border-black">
-              <div className="flex justify-between items-center border-b border-black/10 pb-2">
-                <span className="font-extrabold text-xs tracking-tight">EVENTLY ADMISSION TICKET</span>
-                <span className="font-mono text-[10px] bg-black text-white px-2 py-0.5 rounded">CONFIRMED</span>
+            <div className="p-4 rounded-2xl bg-white text-black text-left space-y-3 shadow-2xl border border-monochrome-700">
+              <div className="flex justify-between items-center border-b border-monochrome-700/50 pb-2">
+                <span className="font-extrabold text-xs tracking-tight text-brand">EVENTLY ADMISSION TICKET</span>
+                <span className="font-mono text-[10px] bg-brand text-white px-2 py-0.5 rounded">CONFIRMED</span>
               </div>
 
               <div className="flex justify-between items-center gap-3">
                 <div>
-                  <h5 className="font-bold text-sm leading-tight text-black">{event.title}</h5>
-                  <p className="text-[11px] text-gray-700 mt-0.5">{venueName}, {city}, India</p>
-                  <p className="text-[11px] text-gray-800 font-mono mt-1">Attendee: {confirmedBooking.attendeeName}</p>
+                  <h5 className="font-bold text-sm leading-tight text-monochrome-100">{event.title}</h5>
+                  <p className="text-[11px] text-monochrome-400 mt-0.5">{venueName}, {city}, India</p>
+                  <p className="text-[11px] text-monochrome-300 font-mono mt-1">Attendee: {confirmedBooking.attendeeName}</p>
                 </div>
 
                 {confirmedBooking.qrCodeData && (
                   <img
                     src={confirmedBooking.qrCodeData}
                     alt="QR Code Ticket"
-                    className="w-20 h-20 border border-black p-1 bg-white rounded"
+                    className="w-20 h-20 border border-monochrome-700 p-1 bg-white rounded"
                   />
                 )}
               </div>
@@ -393,7 +392,7 @@ export default function BookingModal({ event, onClose, onSuccess }) {
                   onClose();
                   navigate('/my-bookings');
                 }}
-                className="w-full py-3 rounded-xl bg-white text-black font-bold text-xs hover:bg-monochrome-200 transition-all shadow-lg flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-hover transition-all shadow-lg shadow-brand/10 flex items-center justify-center gap-2"
               >
                 <Ticket className="w-4 h-4" />
                 Go to My Tickets

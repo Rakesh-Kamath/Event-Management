@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Ticket, 
-  User as UserIcon, 
-  LogOut, 
-  ShieldCheck, 
-  PlusCircle, 
-  Bell, 
+import {
+  Ticket,
+  User as UserIcon,
+  LogOut,
+  ShieldCheck,
+  PlusCircle,
+  Bell,
   Menu,
   X,
   Search,
@@ -27,7 +27,7 @@ export default function Navbar() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef(null);
   const notifRef = useRef(null);
-  
+
   const queryParams = new URLSearchParams(location.search);
   const [navSearch, setNavSearch] = useState(queryParams.get('search') || '');
 
@@ -81,14 +81,15 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass-panel border-b border-monochrome-800/80 bg-monochrome-950/90 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 bg-[#FFFFFF] border-b border-monochrome-700 relative text-monochrome-300 shadow-sm">
       <div className="w-full px-3 sm:px-5 lg:px-6">
         <div className="flex items-center justify-between h-14 py-1.5 gap-2">
-          
+
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex items-center group">
-              <span className="font-black text-xl tracking-wider uppercase bg-gradient-to-r from-white via-monochrome-200 to-monochrome-400 bg-clip-text text-transparent hover:opacity-90 transition-opacity font-sans">
+            <Link to="/" className="flex items-center group gap-1.5">
+              <Ticket className="w-5 h-5 text-brand group-hover:rotate-12 transition-transform duration-300 fill-brand/10" />
+              <span className="font-black text-xl tracking-wider uppercase text-brand hover:opacity-90 transition-opacity font-sans">
                 Evently
               </span>
             </Link>
@@ -97,13 +98,13 @@ export default function Navbar() {
           {/* Search Bar */}
           <div className="flex-1 max-w-sm md:max-w-md mx-2 sm:mx-4">
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 text-monochrome-400 absolute left-3 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 text-monochrome-500 absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 value={navSearch}
                 onChange={handleSearchChange}
                 placeholder="Search events, cities, topics..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white text-xs placeholder-monochrome-500 focus:outline-none focus:border-white transition-all font-mono"
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-monochrome-700 text-monochrome-100 text-xs placeholder-monochrome-500 focus:outline-none focus:border-brand/70 focus:ring-1 focus:ring-brand/40 transition-all font-mono"
               />
               {navSearch && (
                 <button
@@ -111,7 +112,7 @@ export default function Navbar() {
                     setNavSearch('');
                     navigate('/');
                   }}
-                  className="absolute right-2 text-monochrome-400 hover:text-white"
+                  className="absolute right-2 text-monochrome-500 hover:text-brand"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -119,114 +120,37 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* === DESKTOP NAV LINKS with clear category separation === */}
-          <div className="hidden lg:flex items-center gap-1">
-            
-            {/* ---- SECTION 1: Browse / Events ---- */}
-            <div className="flex items-center gap-1 pr-3 mr-3 border-r border-monochrome-700/60">
-              <Link 
-                to="/" 
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                  location.pathname === '/' 
-                    ? 'bg-white/10 text-white' 
-                    : 'text-monochrome-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <CalendarDays className="w-3.5 h-3.5" />
-                Events
-              </Link>
-            </div>
-
-            {/* ---- SECTION 2: User-specific links ---- */}
-            {user && (
-              <div className="flex items-center gap-1">
-                {/* My Tickets — visible to participants only */}
-                {user.role === 'participant' && (
-                  <Link 
-                    to="/my-bookings" 
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                      location.pathname === '/my-bookings' 
-                        ? 'bg-white/10 text-white' 
-                        : 'text-monochrome-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Ticket className="w-3.5 h-3.5" />
-                    My Tickets
-                  </Link>
-                )}
-
-                {user.role === 'organizer' && (
-                  <Link 
-                    to="/organizer" 
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                      location.pathname === '/organizer' 
-                        ? 'bg-white/10 text-white' 
-                        : 'text-monochrome-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    Organizer Studio
-                  </Link>
-                )}
-
-                {user.role === 'admin' && (
-                  <>
-                    <Link 
-                      to="/organizer" 
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                        location.pathname === '/organizer' 
-                          ? 'bg-white/10 text-white' 
-                          : 'text-monochrome-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      Organizer
-                    </Link>
-                    <Link 
-                      to="/admin" 
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                        location.pathname === '/admin' 
-                          ? 'bg-white/10 text-white' 
-                          : 'text-monochrome-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      Admin Panel
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Spacer block (desktop links moved below) */}
+          <div className="hidden lg:block flex-1" />
 
           {/* === RIGHT SECTION: Notifications + Account === */}
           <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-            
+
             {/* Notification Bell */}
             {user && (
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => { setShowNotifs(!showNotifs); setShowAccountMenu(false); }}
-                  className="p-2 rounded-lg text-monochrome-400 hover:text-white hover:bg-white/5 transition-all relative"
+                  className="p-2 rounded-lg text-monochrome-500 hover:text-brand hover:bg-monochrome-850 transition-all relative"
                 >
                   <Bell className="w-4 h-4" />
                   {notifications.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand animate-pulse" />
                   )}
                 </button>
 
                 {showNotifs && (
-                  <div className="absolute right-0 mt-2 w-80 bg-monochrome-900 border border-monochrome-700 rounded-xl shadow-2xl p-3 z-50 text-xs">
-                    <div className="flex justify-between items-center pb-2 border-b border-monochrome-800 font-semibold text-white">
+                  <div className="absolute right-0 mt-2 w-80 bg-monochrome-900 border border-monochrome-750 rounded-xl shadow-2xl p-3 z-50 text-xs text-monochrome-300">
+                    <div className="flex justify-between items-center pb-2 border-b border-monochrome-800 font-semibold text-monochrome-100">
                       <span>Notifications</span>
-                      <span className="text-[10px] text-monochrome-400 font-mono">{notifications.length} Unread</span>
+                      <span className="text-[10px] text-monochrome-500 font-mono">{notifications.length} Unread</span>
                     </div>
                     <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
                       {notifications.map(n => (
-                        <div key={n.id} className="p-2 rounded-lg bg-monochrome-950/80 border border-monochrome-800 hover:border-monochrome-700">
-                          <p className="font-semibold text-white">{n.title}</p>
-                          <p className="text-monochrome-400 text-[11px] mt-0.5">{n.message}</p>
-                          <span className="text-[10px] text-monochrome-500 font-mono mt-1 block">{n.time}</span>
+                        <div key={n.id} className="p-2 rounded-lg bg-monochrome-950 border border-monochrome-750 hover:border-monochrome-600">
+                          <p className="font-semibold text-monochrome-100">{n.title}</p>
+                          <p className="text-monochrome-500 text-[11px] mt-0.5">{n.message}</p>
+                          <span className="text-[10px] text-monochrome-650 font-mono mt-1 block">{n.time}</span>
                         </div>
                       ))}
                     </div>
@@ -236,46 +160,46 @@ export default function Navbar() {
             )}
 
             {/* Divider */}
-            {user && <div className="w-px h-6 bg-monochrome-800" />}
+            {user && <div className="w-px h-6 bg-monochrome-700" />}
 
             {/* Account Section */}
             {user ? (
               <div className="relative" ref={accountMenuRef}>
                 <button
                   onClick={() => { setShowAccountMenu(!showAccountMenu); setShowNotifs(false); }}
-                  className="flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-xl hover:bg-white/5 transition-all group"
+                  className="flex items-center gap-2.5 pl-1 pr-2 py-1 rounded-xl hover:bg-monochrome-850 transition-all group"
                 >
                   {/* Avatar */}
                   {user.avatar ? (
                     <img
                       src={user.avatar}
                       alt={user.name}
-                      className="w-8 h-8 rounded-lg object-cover border border-monochrome-700 group-hover:border-monochrome-500 transition-colors"
+                      className="w-8 h-8 rounded-lg object-cover border border-monochrome-700 group-hover:border-brand transition-colors"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-monochrome-700 to-monochrome-800 border border-monochrome-600 flex items-center justify-center text-[11px] font-bold text-white">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-monochrome-800 to-monochrome-700 border border-monochrome-600 flex items-center justify-center text-[11px] font-bold text-white">
                       {getInitials(user.name)}
                     </div>
                   )}
-                  
+
                   {/* Name + Role */}
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-semibold text-white leading-tight truncate max-w-[110px]">
+                  <div className="flex flex-col items-start text-monochrome-200">
+                    <span className="text-xs font-semibold group-hover:text-brand leading-tight truncate max-w-[110px]">
                       {user.name}
                     </span>
                     <span className={`text-[9px] px-1.5 py-0 rounded font-semibold uppercase tracking-wider border ${getRoleBadgeStyle(user.role)}`}>
                       {user.role}
                     </span>
                   </div>
-                  
-                  <ChevronDown className={`w-3 h-3 text-monochrome-500 transition-transform ${showAccountMenu ? 'rotate-180' : ''}`} />
+
+                  <ChevronDown className="w-3 h-3 text-monochrome-500 transition-transform group-hover:text-brand" />
                 </button>
 
                 {/* Account Dropdown */}
                 {showAccountMenu && (
-                  <div className="absolute right-0 mt-2 w-64 bg-monochrome-900 border border-monochrome-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-64 bg-monochrome-900 border border-monochrome-750 rounded-xl shadow-2xl z-50 overflow-hidden text-monochrome-300">
                     {/* User Info Header */}
-                    <div className="p-4 border-b border-monochrome-800 bg-monochrome-950/50">
+                    <div className="p-4 border-b border-monochrome-800 bg-monochrome-950/80">
                       <div className="flex items-center gap-3">
                         {user.avatar ? (
                           <img
@@ -284,13 +208,13 @@ export default function Navbar() {
                             className="w-10 h-10 rounded-lg object-cover border border-monochrome-700"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-monochrome-700 to-monochrome-800 border border-monochrome-600 flex items-center justify-center text-sm font-bold text-white">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-monochrome-800 to-monochrome-700 border border-monochrome-600 flex items-center justify-center text-sm font-bold text-white font-sans">
                             {getInitials(user.name)}
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-                          <p className="text-[11px] text-monochrome-400 truncate flex items-center gap-1">
+                          <p className="text-sm font-semibold text-monochrome-100 truncate">{user.name}</p>
+                          <p className="text-[11px] text-monochrome-500 truncate flex items-center gap-1">
                             <Mail className="w-3 h-3 flex-shrink-0" />
                             {user.email}
                           </p>
@@ -307,14 +231,14 @@ export default function Navbar() {
                     </div>
 
                     {/* Menu Items */}
-                    <div className="p-1.5">
+                    <div className="p-1.5 bg-monochrome-900">
                       {user.role === 'participant' && (
                         <Link
                           to="/my-bookings"
                           onClick={() => setShowAccountMenu(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-white hover:bg-white/5 transition-all"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-brand hover:bg-brand/5 transition-all font-semibold"
                         >
-                          <Ticket className="w-3.5 h-3.5" />
+                          <Ticket className="w-3.5 h-3.5 text-brand" />
                           My Tickets
                         </Link>
                       )}
@@ -322,9 +246,9 @@ export default function Navbar() {
                         <Link
                           to="/organizer"
                           onClick={() => setShowAccountMenu(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-white hover:bg-white/5 transition-all"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-brand hover:bg-brand/5 transition-all font-semibold"
                         >
-                          <PlusCircle className="w-3.5 h-3.5" />
+                          <PlusCircle className="w-3.5 h-3.5 text-brand" />
                           Organizer Studio
                         </Link>
                       )}
@@ -332,19 +256,19 @@ export default function Navbar() {
                         <Link
                           to="/admin"
                           onClick={() => setShowAccountMenu(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-white hover:bg-white/5 transition-all"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-monochrome-300 hover:text-brand hover:bg-brand/5 transition-all font-semibold"
                         >
-                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <ShieldCheck className="w-3.5 h-3.5 text-brand" />
                           Admin Panel
                         </Link>
                       )}
                     </div>
 
                     {/* Logout */}
-                    <div className="p-1.5 border-t border-monochrome-800">
+                    <div className="p-1.5 border-t border-monochrome-750 bg-monochrome-900">
                       <button
                         onClick={() => { setShowAccountMenu(false); logout(); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 font-semibold transition-all"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         Sign Out
@@ -356,7 +280,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-1.5 text-xs font-semibold text-black bg-white rounded-lg hover:bg-monochrome-200 transition-all shadow-md"
+                className="px-4 py-1.5 text-xs font-bold text-white bg-brand rounded-md hover:bg-brand-hover transition-all shadow-sm shadow-brand/10"
               >
                 Sign In
               </Link>
@@ -367,7 +291,7 @@ export default function Navbar() {
           <div className="lg:hidden flex items-center space-x-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 text-monochrome-400 hover:text-white"
+              className="p-1.5 text-monochrome-500 hover:text-brand"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -375,36 +299,94 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* SUB-NAVBAR CATEGORY STRIP (Desktop BookMyShow Style) */}
+      <div className="w-full bg-monochrome-800 border-b border-monochrome-700 text-monochrome-300 hidden lg:block py-2 px-3 sm:px-5 lg:px-6">
+        <div className="flex items-center justify-between">
+          
+          {/* Left: General Categories / Navigation */}
+          <div className="flex items-center gap-6">
+            <Link
+              to="/"
+              className={`text-xs font-semibold hover:text-brand transition-colors flex items-center gap-1.5 ${
+                location.pathname === '/' ? 'text-brand' : 'text-monochrome-400'
+              }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5 text-brand" />
+              All Events
+            </Link>
+          </div>
+
+          {/* Right: User Studio / Action Spaces */}
+          {user && (
+            <div className="flex items-center gap-6">
+              {user.role === 'participant' && (
+                <Link
+                  to="/my-bookings"
+                  className={`text-xs font-semibold hover:text-brand transition-colors flex items-center gap-1.5 ${
+                    location.pathname === '/my-bookings' ? 'text-brand' : 'text-monochrome-450'
+                  }`}
+                >
+                  <Ticket className="w-3.5 h-3.5 text-brand/80" />
+                  My Tickets
+                </Link>
+              )}
+              {(user.role === 'organizer' || user.role === 'admin') && (
+                <Link
+                  to="/organizer"
+                  className={`text-xs font-semibold hover:text-brand transition-colors flex items-center gap-1.5 ${
+                    location.pathname === '/organizer' ? 'text-brand' : 'text-monochrome-450'
+                  }`}
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-brand/80" />
+                  Organizer Studio
+                </Link>
+              )}
+              {user.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className={`text-xs font-semibold hover:text-brand transition-colors flex items-center gap-1.5 ${
+                    location.pathname === '/admin' ? 'text-brand' : 'text-monochrome-450'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand/80" />
+                  Admin Panel
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-monochrome-950 border-b border-monochrome-800 px-4 py-3 space-y-1">
-          
+        <div className="lg:hidden bg-[#FFFFFF] border-b border-monochrome-700 px-4 py-3 space-y-1 text-monochrome-300">
+
           {/* Events Section */}
-          <div className="pb-2 mb-2 border-b border-monochrome-800/60">
+          <div className="pb-2 mb-2 border-b border-monochrome-700/60">
             <p className="text-[10px] uppercase tracking-widest text-monochrome-500 font-semibold px-2 mb-1.5">Browse</p>
-            <Link 
-              to="/" 
-              onClick={() => setMobileMenuOpen(false)} 
-              className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all ${
-                location.pathname === '/' ? 'bg-white/10 text-white font-semibold' : 'text-monochrome-300 hover:text-white hover:bg-white/5'
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all border ${
+                location.pathname === '/' ? 'bg-brand text-white border-transparent font-semibold shadow' : 'text-monochrome-400 hover:text-brand hover:bg-brand/5 border-transparent'
               }`}
             >
               <CalendarDays className="w-4 h-4" />
               All Events
             </Link>
           </div>
-          
+
           {/* User Section */}
           {user && (
-            <div className="pb-2 mb-2 border-b border-monochrome-800/60">
+            <div className="pb-2 mb-2 border-b border-monochrome-700/60">
               <p className="text-[10px] uppercase tracking-widest text-monochrome-500 font-semibold px-2 mb-1.5">Your Space</p>
-              
+
               {user.role === 'participant' && (
-                <Link 
-                  to="/my-bookings" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all ${
-                    location.pathname === '/my-bookings' ? 'bg-white/10 text-white font-semibold' : 'text-monochrome-300 hover:text-white hover:bg-white/5'
+                <Link
+                  to="/my-bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all border ${
+                    location.pathname === '/my-bookings' ? 'bg-brand text-white border-transparent font-semibold shadow' : 'text-monochrome-400 hover:text-brand hover:bg-brand/5 border-transparent'
                   }`}
                 >
                   <Ticket className="w-4 h-4" />
@@ -413,11 +395,11 @@ export default function Navbar() {
               )}
 
               {(user.role === 'organizer' || user.role === 'admin') && (
-                <Link 
-                  to="/organizer" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all ${
-                    location.pathname === '/organizer' ? 'bg-white/10 text-white font-semibold' : 'text-monochrome-300 hover:text-white hover:bg-white/5'
+                <Link
+                  to="/organizer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all border ${
+                    location.pathname === '/organizer' ? 'bg-brand text-white border-transparent font-semibold shadow' : 'text-monochrome-400 hover:text-brand hover:bg-brand/5 border-transparent'
                   }`}
                 >
                   <PlusCircle className="w-4 h-4" />
@@ -426,11 +408,11 @@ export default function Navbar() {
               )}
 
               {user.role === 'admin' && (
-                <Link 
-                  to="/admin" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all ${
-                    location.pathname === '/admin' ? 'bg-white/10 text-white font-semibold' : 'text-monochrome-300 hover:text-white hover:bg-white/5'
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-2 py-2 rounded-lg text-xs transition-all border ${
+                    location.pathname === '/admin' ? 'bg-brand text-white border-transparent font-semibold shadow' : 'text-monochrome-400 hover:text-brand hover:bg-brand/5 border-transparent'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4" />
@@ -447,31 +429,31 @@ export default function Navbar() {
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-lg object-cover border border-monochrome-700" />
                 ) : (
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-monochrome-700 to-monochrome-800 border border-monochrome-600 flex items-center justify-center text-xs font-bold text-white">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-monochrome-800 to-monochrome-750 border border-monochrome-700 flex items-center justify-center text-xs font-bold text-monochrome-350">
                     {getInitials(user.name)}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">{user.name}</p>
-                  <p className="text-[11px] text-monochrome-400 truncate">{user.email}</p>
+                  <p className="text-xs font-semibold text-monochrome-100 truncate">{user.name}</p>
+                  <p className="text-[11px] text-monochrome-500 truncate">{user.email}</p>
                 </div>
                 <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border ${getRoleBadgeStyle(user.role)}`}>
                   {user.role}
                 </span>
               </div>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); logout(); }} 
-                className="w-full flex items-center gap-2 px-2 py-2 mt-1 rounded-lg text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+              <button
+                onClick={() => { setMobileMenuOpen(false); logout(); }}
+                className="w-full flex items-center gap-2 px-2 py-2 mt-1 rounded-lg text-xs text-red-500 hover:text-red-650 hover:bg-red-500/10 transition-all font-semibold"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
               </button>
             </div>
           ) : (
-            <Link 
-              to="/login" 
-              onClick={() => setMobileMenuOpen(false)} 
-              className="block text-center py-2 text-xs bg-white text-black rounded-lg font-semibold hover:bg-monochrome-200 transition-all"
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-center py-2 text-xs bg-brand text-white rounded-lg font-bold hover:bg-brand-hover transition-all"
             >
               Sign In
             </Link>

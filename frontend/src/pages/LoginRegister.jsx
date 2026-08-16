@@ -12,14 +12,14 @@ export default function LoginRegister() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  
+
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [isSignupVerify, setIsSignupVerify] = useState(false);
   const [otp, setOtp] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [mockEmail, setMockEmail] = useState('participant@demo.com');
 
   const handleGoogleLoginResponse = async (response) => {
@@ -30,7 +30,7 @@ export default function LoginRegister() {
         credential: response.credential
       });
       login(res.data.token, res.data.user);
-      
+
       if (res.data.user.role === 'admin') navigate('/admin');
       else if (res.data.user.role === 'organizer') navigate('/organizer');
       else navigate('/my-bookings');
@@ -54,7 +54,7 @@ export default function LoginRegister() {
         credential: `mock_token_${mockEmail.trim()}`
       });
       login(res.data.token, res.data.user);
-      
+
       if (res.data.user.role === 'admin') navigate('/admin');
       else if (res.data.user.role === 'organizer') navigate('/organizer');
       else navigate('/my-bookings');
@@ -107,7 +107,7 @@ export default function LoginRegister() {
 
     try {
       const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const payload = isRegister 
+      const payload = isRegister
         ? { name, email, password }
         : { email, password };
 
@@ -150,8 +150,8 @@ export default function LoginRegister() {
     setError('');
 
     try {
-      const endpoint = isSignupVerify 
-        ? '/api/auth/verify-signup-otp' 
+      const endpoint = isSignupVerify
+        ? '/api/auth/verify-signup-otp'
         : '/api/auth/verify-login-otp';
 
       const res = await axios.post(endpoint, {
@@ -175,16 +175,16 @@ export default function LoginRegister() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-6">
       <div className="max-w-md w-full glass-panel border border-monochrome-800 rounded-3xl p-6 shadow-2xl space-y-5 relative overflow-hidden">
-        
+
         {/* Top Header: Evently */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-white text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl">
+          <div className="w-12 h-12 rounded-2xl bg-brand text-white font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl shadow-brand/10">
             E
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl font-extrabold text-monochrome-100 tracking-tight">
             {isRegister ? 'Create Account' : 'Welcome Back'}
           </h2>
-          <p className="text-xs text-monochrome-400 font-mono">
+          <p className="text-xs text-monochrome-500 font-mono">
             {isRegister ? 'Join Evently to reserve and discover top Indian events' : 'Sign in to Evently'}
           </p>
         </div>
@@ -193,10 +193,10 @@ export default function LoginRegister() {
         {showOTPInput ? (
           <form onSubmit={handleOTPVerify} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-monochrome-300 block mb-1">
+              <label className="text-xs font-semibold text-monochrome-200 block mb-1">
                 {isSignupVerify ? 'Verify Your Email Address' : 'Enter 6-Digit Verification Code'}
               </label>
-              <div className="text-[11px] text-monochrome-400 font-mono mb-2">
+              <div className="text-[11px] text-monochrome-500 font-mono mb-2">
                 We sent a {isSignupVerify ? 'signup verification' : '2-Factor authentication'} passcode to your email: <strong>{email}</strong>
               </div>
               <input
@@ -206,12 +206,12 @@ export default function LoginRegister() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full text-center tracking-[12px] pl-[12px] font-extrabold text-lg py-3 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white focus:outline-none focus:border-white"
+                className="w-full text-center tracking-[12px] pl-[12px] font-extrabold text-lg py-3 rounded-xl bg-monochrome-900 border border-monochrome-700 text-monochrome-100 focus:outline-none focus:border-brand/70"
               />
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-950/50 p-2.5 rounded-xl border border-red-800">{error}</p>
+              <p className="text-xs text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-200">{error}</p>
             )}
 
             <div className="flex gap-2">
@@ -222,14 +222,14 @@ export default function LoginRegister() {
                   setOtp('');
                   setError('');
                 }}
-                className="flex-1 py-3 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white text-xs hover:bg-monochrome-850 font-bold transition-all"
+                className="flex-1 py-3 rounded-xl bg-monochrome-900 border border-monochrome-700 text-monochrome-200 hover:text-brand hover:bg-brand/5 font-bold transition-all"
               >
                 Back to Sign In
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-3 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-monochrome-200 transition-all flex items-center justify-center gap-2 shadow-xl"
+                className="flex-1 py-3 rounded-xl bg-brand text-white font-extrabold text-xs hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/10"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -246,7 +246,7 @@ export default function LoginRegister() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <div>
-                <label className="text-xs font-semibold text-monochrome-300 block mb-1">Full Name</label>
+                <label className="text-xs font-semibold text-monochrome-200 block mb-1">Full Name</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-monochrome-500 absolute left-3 top-3" />
                   <input
@@ -255,14 +255,14 @@ export default function LoginRegister() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your name"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white text-xs focus:outline-none focus:border-white"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-monochrome-100 text-xs focus:outline-none focus:border-brand/70"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-monochrome-300 block mb-1">Email Address</label>
+              <label className="text-xs font-semibold text-monochrome-200 block mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-monochrome-500 absolute left-3 top-3" />
                 <input
@@ -271,13 +271,13 @@ export default function LoginRegister() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white text-xs focus:outline-none focus:border-white"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-monochrome-100 text-xs focus:outline-none focus:border-brand/70"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-monochrome-300 block mb-1">Password</label>
+              <label className="text-xs font-semibold text-monochrome-200 block mb-1">Password</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-monochrome-500 absolute left-3 top-3" />
                 <input
@@ -286,19 +286,19 @@ export default function LoginRegister() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-white text-xs focus:outline-none focus:border-white"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-monochrome-900 border border-monochrome-700 text-monochrome-100 text-xs focus:outline-none focus:border-brand/70"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-950/50 p-2.5 rounded-xl border border-red-800">{error}</p>
+              <p className="text-xs text-red-500 bg-red-500/10 p-2.5 rounded-xl border border-red-200">{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-monochrome-200 transition-all flex items-center justify-center gap-2 shadow-xl"
+              className="w-full py-3 rounded-xl bg-brand text-white font-extrabold text-xs hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/10"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -313,19 +313,19 @@ export default function LoginRegister() {
         )}
 
         <div className="relative flex items-center justify-center my-4">
-          <div className="border-t border-monochrome-800 w-full"></div>
-          <span className="bg-monochrome-950 px-3 text-xs text-monochrome-500 font-mono absolute">OR</span>
+          <div className="border-t border-monochrome-700 w-full"></div>
+          <span className="bg-monochrome-950 px-3 text-xs text-monochrome-500 font-mono absolute animate-all">OR</span>
         </div>
 
         <div className="space-y-3">
           {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-            <div id="googleSignInDiv" className="w-full flex justify-center"></div>
+            <div id="googleSignInDiv" className="w-full flex justify-center text-monochrome-200"></div>
           )}
 
           {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
             <div className="space-y-2">
-              <div className="bg-monochrome-900 border border-dashed border-monochrome-700 rounded-xl p-3 text-center space-y-2">
-                <p className="text-[10px] font-mono text-monochrome-400">
+              <div className="bg-monochrome-800 border border-dashed border-monochrome-700 rounded-xl p-3 text-center space-y-2">
+                <p className="text-[10px] font-mono text-monochrome-500">
                   ⚠️ Google Client ID not set.<br />
                   Use Developer Mock Mode to test:
                 </p>
@@ -335,12 +335,12 @@ export default function LoginRegister() {
                     placeholder="mock.user@gmail.com"
                     value={mockEmail}
                     onChange={(e) => setMockEmail(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-monochrome-950 border border-monochrome-800 text-[11px] text-white focus:outline-none focus:border-white"
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-monochrome-950 border border-monochrome-700 text-[11px] text-monochrome-100 focus:outline-none focus:border-brand/70"
                   />
                   <button
                     type="button"
                     onClick={handleMockGoogleLogin}
-                    className="px-3 py-1.5 bg-white text-black text-[11px] font-extrabold rounded-lg hover:bg-monochrome-200 transition-colors"
+                    className="px-3 py-1.5 bg-brand text-white text-[11px] font-bold rounded-lg hover:bg-brand-hover transition-colors shadow-sm"
                   >
                     Login
                   </button>
@@ -358,7 +358,7 @@ export default function LoginRegister() {
               setOtp('');
               setError('');
             }}
-            className="text-xs text-monochrome-400 hover:text-white font-mono transition-colors"
+            className="text-xs text-monochrome-500 hover:text-brand font-mono font-semibold transition-colors"
           >
             {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
           </button>
