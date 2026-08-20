@@ -17,7 +17,7 @@ export default function QrScannerModal({ onClose }) {
     setErrorMsg('');
 
     try {
-      const res = await axios.post('/api/bookings/verify-qr', {
+      const res = await axios.post('/api/tickets/verify-qr', {
         code: ticketInput.trim(),
         bookingNumber: ticketInput.trim()
       });

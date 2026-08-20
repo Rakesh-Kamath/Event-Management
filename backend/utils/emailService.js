@@ -59,6 +59,24 @@ const getTransporter = async () => {
 // Send mail wrapper that logs Ethereal test URLs
 export const sendMail = async (options) => {
   try {
+    const toEmail = options.to;
+    if (toEmail) {
+      const emailLower = toEmail.toLowerCase();
+      // Block sending emails to seeded or dummy addresses
+      if (
+        emailLower.endsWith('@demo.com') ||
+        emailLower.endsWith('@example.com') ||
+        emailLower.endsWith('@test.com') ||
+        emailLower.endsWith('@invalid.com') ||
+        emailLower.includes('.demo') ||
+        emailLower.includes('.test') ||
+        emailLower.includes('.example')
+      ) {
+        console.log(`[Nodemailer Mock Log]: Intercepted and blocked sending email to dummy address: "${toEmail}" (Subject: "${options.subject}")`);
+        return { messageId: 'mock-blocked-id', testUrl: null };
+      }
+    }
+
     const activeTransporter = await getTransporter();
     const mailOptions = {
       from: emailFrom,

@@ -54,6 +54,10 @@ const eventSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 eventSchema.index({ 'venue.location': '2dsphere' });
+eventSchema.index({ status: 1, category: 1, dateTime: 1 });
+eventSchema.index({ status: 1, city: 1, dateTime: 1 });
+eventSchema.index({ status: 1, dateTime: 1 });
+eventSchema.index({ title: 'text', description: 'text' });
 
 eventSchema.pre('save', function (next) {
   if (!this.organizer) {

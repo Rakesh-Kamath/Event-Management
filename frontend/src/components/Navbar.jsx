@@ -31,6 +31,32 @@ export default function Navbar() {
   const queryParams = new URLSearchParams(location.search);
   const [navSearch, setNavSearch] = useState(queryParams.get('search') || '');
 
+  // Sync search input state with URL changes (e.g. if filters are reset)
+  useEffect(() => {
+    const currentUrlSearch = new URLSearchParams(location.search).get('search') || '';
+    if (currentUrlSearch !== navSearch) {
+      setNavSearch(currentUrlSearch);
+    }
+  }, [location.search]);
+
+  // Debounce search input changes before navigating and querying the API
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      const currentUrlSearch = new URLSearchParams(location.search).get('search') || '';
+      if (navSearch !== currentUrlSearch) {
+        if (navSearch) {
+          navigate(`/?search=${encodeURIComponent(navSearch)}`);
+        } else {
+          if (currentUrlSearch) {
+            navigate('/');
+          }
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [navSearch, navigate, location.search]);
+
   useEffect(() => {
     if (user) {
       setNotifications([
@@ -55,13 +81,7 @@ export default function Navbar() {
   }, []);
 
   const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setNavSearch(val);
-    if (val) {
-      navigate(`/?search=${encodeURIComponent(val)}`);
-    } else {
-      navigate('/');
-    }
+    setNavSearch(e.target.value);
   };
 
   const getRoleBadgeStyle = (role) => {

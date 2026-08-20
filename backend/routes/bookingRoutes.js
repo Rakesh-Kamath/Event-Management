@@ -136,19 +136,30 @@ router.post('/verify-payment', protect, async (req, res) => {
       }
     }
 
+    // Atomically check and decrement availableSeats
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: eventId, availableSeats: { $gte: count } },
+      { $inc: { availableSeats: -count } },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(400).json({ message: 'Seats are no longer available for this event.' });
+    }
+
     const bookingNumber = generateBookingCode();
     const verificationCode = `VERIFY-${bookingNumber}-${Date.now().toString(36).toUpperCase()}`;
     const txnPaymentId = razorpay_payment_id || paymentId || `PAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const booking = await Booking.create({
       bookingNumber,
-      eventId: event._id,
-      event: event._id,
+      eventId: updatedEvent._id,
+      event: updatedEvent._id,
       userId: req.user._id,
       user: req.user._id,
       seatsBooked: count,
       ticketsCount: count,
-      unitPrice: event.ticketPrice,
+      unitPrice: updatedEvent.ticketPrice,
       totalAmount,
       paymentStatus: 'successful',
       paymentMethod: razorpay_payment_id ? 'razorpay' : paymentMethod,
@@ -158,10 +169,6 @@ router.post('/verify-payment', protect, async (req, res) => {
       attendeeEmail: req.user.email,
       attendeePhone: attendeePhone || ''
     });
-
-    // Atomically decrement availableSeats
-    event.availableSeats -= count;
-    await event.save();
 
     // Create unique Ticket schema record & QR code
     const ticketId = `TCK-${bookingNumber}-${Date.now().toString(36).toUpperCase()}`;

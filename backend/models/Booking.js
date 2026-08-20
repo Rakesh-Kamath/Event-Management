@@ -27,6 +27,11 @@ const bookingSchema = new mongoose.Schema({
   bookingDate: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+bookingSchema.index({ eventId: 1 });
+bookingSchema.index({ userId: 1 });
+bookingSchema.index({ event: 1 });
+bookingSchema.index({ user: 1 });
+
 // Pre-save hook to populate aliases
 bookingSchema.pre('save', function (next) {
   if (!this.event) this.event = this.eventId;

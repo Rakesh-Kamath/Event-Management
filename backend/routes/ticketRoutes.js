@@ -17,14 +17,27 @@ router.post('/verify-qr', protect, authorize('organizer', 'admin'), async (req, 
       return res.status(400).json({ message: 'Please provide ticketId or QR code payload' });
     }
 
+    let parsedPayload = {};
+    if (typeof searchCode === 'string' && searchCode.startsWith('{')) {
+      try {
+        parsedPayload = JSON.parse(searchCode);
+      } catch (e) {}
+    }
+
+    const targetTicketId = parsedPayload.ticketId || (typeof searchCode === 'string' && searchCode.startsWith('TCK-') ? searchCode : null);
+    const targetVerificationCode = parsedPayload.code || code;
+    const targetBookingNumber = parsedPayload.bNo || bookingNumber;
+
     let ticket;
     let booking;
 
-    // Check Ticket Schema
-    ticket = await Ticket.findOne({ ticketId: searchCode }).populate({
-      path: 'bookingId',
-      populate: { path: 'eventId user' }
-    });
+    // Check Ticket Schema using extracted ticketId if available
+    if (targetTicketId) {
+      ticket = await Ticket.findOne({ ticketId: targetTicketId }).populate({
+        path: 'bookingId',
+        populate: { path: 'eventId user' }
+      });
+    }
 
     if (ticket) {
       booking = ticket.bookingId;
@@ -57,16 +70,9 @@ router.post('/verify-qr', protect, authorize('organizer', 'admin'), async (req, 
     }
 
     // Fallback search in Booking Schema
-    let parsedCode = searchCode;
-    if (typeof searchCode === 'string' && searchCode.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(searchCode);
-        parsedCode = parsed.code || parsed.bNo || searchCode;
-      } catch (e) {}
-    }
-
+    const fallbackCode = targetVerificationCode || targetBookingNumber || searchCode;
     booking = await Booking.findOne({
-      $or: [{ bookingNumber: parsedCode }, { verificationCode: parsedCode }]
+      $or: [{ bookingNumber: fallbackCode }, { verificationCode: fallbackCode }]
     }).populate('eventId user event');
 
     if (!booking) {

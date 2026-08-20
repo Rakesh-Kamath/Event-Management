@@ -8,4 +8,6 @@ const ticketSchema = new mongoose.Schema({
   scannedAt: { type: Date, default: null }
 }, { timestamps: true });
 
+ticketSchema.index({ bookingId: 1 });
+
 export default mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
