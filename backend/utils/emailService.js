@@ -276,7 +276,7 @@ export const sendPaymentSuccessEmail = async ({ email, name, event, booking }) =
         </div>
         <div style="${emailFooterStyle}">
           &copy; 2026 Evently Platform. Securely processed via Razorpay Sandbox.<br>
-          For receipt inquiries, contact organizer123@gmail.com
+          For receipt inquiries, contact organizer.evently@gmail.com
         </div>
       </div>
     </div>

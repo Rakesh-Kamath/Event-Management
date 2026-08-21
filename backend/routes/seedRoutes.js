@@ -58,8 +58,8 @@ router.post('/', async (req, res) => {
     await Notification.deleteMany({});
 
     const salt = await bcrypt.genSalt(10);
-    const adminPass = await bcrypt.hash('admin123', salt);
-    const orgPass = await bcrypt.hash('organizer123', salt);
+    const adminPass = await bcrypt.hash('P@sswordadi05', salt);
+    const orgPass = await bcrypt.hash('P@sswordadi05', salt);
     const userPass = await bcrypt.hash('user123', salt);
 
     // ===========================
@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
     // ===========================
     const admin = await User.create({
       name: 'System Administrator',
-      email: 'admin123@gmail.com',
+      email: 'admin.evently@gmail.com',
       password: adminPass,
       role: 'admin',
       isApproved: true
@@ -75,7 +75,7 @@ router.post('/', async (req, res) => {
 
     const organizer = await User.create({
       name: 'Experience Entertainment',
-      email: 'organizer123@gmail.com',
+      email: 'organizer.evently@gmail.com',
       password: orgPass,
       role: 'organizer',
       organizationName: 'Experience Entertainment India',
@@ -375,8 +375,8 @@ router.post('/', async (req, res) => {
         attendance: `${attendedBookings} checked in via QR`
       },
       credentials: {
-        admin: { email: 'admin123@gmail.com', password: 'admin123', role: 'admin' },
-        organizer: { email: 'organizer123@gmail.com', password: 'organizer123', role: 'organizer' },
+        admin: { email: 'admin.evently@gmail.com', password: 'P@sswordadi05', role: 'admin' },
+        organizer: { email: 'organizer.evently@gmail.com', password: 'P@sswordadi05', role: 'organizer' },
         participant: { email: 'participant@demo.com', password: 'user123', role: 'participant' }
       }
     });

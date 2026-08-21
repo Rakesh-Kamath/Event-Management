@@ -123,23 +123,23 @@ router.post('/login', async (req, res) => {
 
     let user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      if (email.toLowerCase() === 'admin123@gmail.com' && password === 'admin123') {
+      if (email.toLowerCase() === 'admin.evently@gmail.com' && password === 'P@sswordadi05') {
         const salt = await bcrypt.genSalt(10);
-        const hashedPw = await bcrypt.hash('admin123', salt);
+        const hashedPw = await bcrypt.hash('P@sswordadi05', salt);
         user = await User.create({
           name: 'System Administrator',
-          email: 'admin123@gmail.com',
+          email: 'admin.evently@gmail.com',
           password: hashedPw,
           role: 'admin',
           isApproved: true,
           isVerified: true
         });
-      } else if (email.toLowerCase() === 'organizer123@gmail.com' && password === 'organizer123') {
+      } else if (email.toLowerCase() === 'organizer.evently@gmail.com' && password === 'P@sswordadi05') {
         const salt = await bcrypt.genSalt(10);
-        const hashedPw = await bcrypt.hash('organizer123', salt);
+        const hashedPw = await bcrypt.hash('P@sswordadi05', salt);
         user = await User.create({
           name: 'Experience Entertainment',
-          email: 'organizer123@gmail.com',
+          email: 'organizer.evently@gmail.com',
           password: hashedPw,
           role: 'organizer',
           organizationName: 'Experience Entertainment India',
@@ -171,7 +171,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Bypass OTP for special users
-    const isBypassOTP = (email.toLowerCase() === 'admin123@gmail.com') || (email.toLowerCase() === 'organizer123@gmail.com');
+    const isBypassOTP = (email.toLowerCase() === 'admin.evently@gmail.com') || (email.toLowerCase() === 'organizer.evently@gmail.com');
 
     if (isBypassOTP) {
       if (!user.isVerified) {
